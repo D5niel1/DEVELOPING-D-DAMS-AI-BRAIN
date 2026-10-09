@@ -1,0 +1,14 @@
+{
+  "dataset_name": "local-import-template",
+  "input_format": "jsonl",
+  "text_field": "text",
+  "seed": 1337,
+  "train_fraction": 0.8,
+  "validation_fraction": 0.1,
+  "test_fraction": 0.1,
+  "source_url": null,
+  "license": null,
+  "dataset_version": null,
+  "retrieval_date": null,
+  "license_verified": false
+}

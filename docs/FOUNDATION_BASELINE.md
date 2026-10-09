@@ -12,8 +12,9 @@ At the initial audit, `python -m pytest -q` could not run because pytest was not
 
 - `brain.config`: dependency-free validated configuration system (Phase 1A).
 - `brain.tokenizer.ByteTokenizer`: deterministic fixed UTF-8 byte vocabulary, stable special IDs, versioned JSON save/load, malformed-artifact checks, strict decode errors, and model-config vocabulary compatibility checks (see [`TOKENIZER.md`](TOKENIZER.md)).
+- `brain.data`: dependency-free local JSONL/text-line ingestion, cleaning, exact deduplication, deterministic splits, tokenizer byte-token statistics, and raw/output hashes plus manifest (see [`DATA_PIPELINE.md`](DATA_PIPELINE.md)).
 
-The example `configs/duo_v0.json` remains provisional configuration only. It is not evidence that Duo v0 exists, has trained, or generated text. Dataset provenance, Transformer, training, evaluation, checkpoint, inference, and API remain unimplemented.
+The example `configs/duo_v0.json` remains provisional configuration only. It is not evidence that Duo v0 exists, has trained, or generated text. No external dataset is present or selected; dataset training, Transformer, evaluation, checkpoint, inference, and API remain unimplemented.
 
 ## Historical environment and limitations
 
