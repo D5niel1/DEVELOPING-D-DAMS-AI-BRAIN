@@ -1,6 +1,6 @@
 # D-DAMS Dataset Pipeline (Phase 1C)
 
-**Status:** local ingestion, cleaning, exact deduplication, deterministic train/validation/test splitting, tokenizer-byte statistics, hashes and manifests are implemented. Synthetic tests exercise the pipeline. No external dataset has been selected or downloaded; no model has been trained.
+**Status:** local ingestion, cleaning, exact deduplication, deterministic train/validation/test splitting, tokenizer-byte statistics, hashes and manifests are implemented. Synthetic tests exercise the pipeline. A separate, bounded 128-row GSM8K sample has been imported locally; its provenance and results are recorded in [`DATASET_GSM8K_SAMPLE.md`](DATASET_GSM8K_SAMPLE.md). No model has been trained.
 
 ## Input formats
 
@@ -44,9 +44,9 @@ python -m compileall -q brain tests
 
 ## Dataset access and import readiness
 
-At the time of this milestone, the session's Hugging Face connector was listed but **disabled**. No connector search/download was performed, no dataset card/license/size was verified, no candidate dataset was selected, and no raw sample was downloaded. Consequently, this milestone makes no licensing or suitability claim for any real corpus.
+The session's Hugging Face connector is listed but **disabled**. Public anonymous access to the Hugging Face Hub metadata API and dataset-server rows API was separately verified for the GSM8K sample; this does not verify authenticated or gated access and does not mean the connector works. The selected sample, license evidence, candidate comparison, source revision, retrieval hashes and import results are documented in [`DATASET_GSM8K_SAMPLE.md`](DATASET_GSM8K_SAMPLE.md). No other corpus was downloaded.
 
-When selecting a corpus later: open the dataset's canonical Hugging Face card and linked source/license; verify the license covers the intended use and redistribution of the processed sample; pin a dataset revision; choose a small sample; record dataset name, revision, source URL, license terms, retrieval date, and selection method in the config/manifest; save the unmodified sample under `datasets/raw/`; then run the pipeline. Do not proceed if the license or provenance is unclear. The Hugging Face connection must be enabled and its read/search/download capabilities verified before relying on it.
+For future datasets: open the canonical card and linked source/license; verify that terms cover the intended use and redistribution; pin a revision; select a bounded sample; record dataset name, revision, source URL, license, retrieval date and selection method; preserve source bytes under `datasets/raw/`; then run the pipeline. Do not proceed if license or provenance is unclear. Enable and separately verify the Hugging Face connector before relying on connector-based or authenticated access.
 
 ## Limitations
 
