@@ -222,3 +222,6 @@ datasets/raw/*
 !datasets/raw/.gitkeep
 datasets/processed/*
 !datasets/processed/.gitkeep
+
+# Model checkpoints, training logs, and experiment artifacts
+checkpoints/

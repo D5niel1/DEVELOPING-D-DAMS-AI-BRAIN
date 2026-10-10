@@ -1,6 +1,6 @@
 # Duo v0 — Implemented Architecture and Verification
 
-**Status:** Implemented and acceptance-tested as a local decoder-only Transformer. **Untrained.** Not evidence of conversational capability, language quality, or fitness as a product.
+**Status:** The local decoder-only Transformer is implemented and acceptance-tested; one bounded 100-step smoke run is complete, with its trained checkpoint kept locally and Git-ignored. The tracked config still initializes the base model. Neither the architecture gate nor this smoke run establishes conversational capability, language quality, or fitness as a product.
 
 ## Backend and setup
 
@@ -75,23 +75,35 @@ python -m compileall -q brain tests
 git diff --check
 ```
 
-## Controlled training experiment proposal — not started
+## Controlled smoke-training experiment — completed
 
-This proposal is separate from implementation. **No training has been run; explicit user approval is required before starting.**
+**Status:** one bounded engineering experiment was explicitly requested and completed on 2026-10-10. This was not a capability evaluation, a full training run, or approval for another run.
 
-- **Objective:** validate a tiny, deterministic training loop and checkpoint-resume path; check whether train next-token cross-entropy can decrease without claiming general language ability.
-- **Dataset:** only the existing local GSM8K sample: 102 train / 13 validation / 13 test records. This is a tiny pipeline/smoke-test subset, not a capable conversational corpus.
-- **Compute:** CPU-only on the current environment (reported 6 CPUs, 23 GiB RAM total, about 21 GiB available); no GPU/cloud service. Proposed cap: one CPU thread, batch size 4, context 128, at most 100 optimizer steps, no more than 2 minutes wall time. Resource readings are environment observations, not a guarantee of future allocation.
-- **Measured pre-training baseline:** CPU, PyTorch 2.7.1+cpu, one thread, config/init seed 1337, no optimizer steps, deterministic non-shuffled batches of 4. Cross-entropy is averaged over non-PAD next-token targets; perplexity is `exp(mean NLL)`.
+- **Objective:** verify optimizer execution, deterministic loss reporting, scheduled validation, finite state, and portable checkpoint reload.
+- **Data:** pinned local GSM8K main/train rows 0–127, transformed into 102 train / 13 validation / 13 test records. Training used train only; validation was used for monitoring and the divergence stop; test bytes were not read for the new baseline and the test split was evaluated once after step 100 and checkpoint verification.
+- **Runtime:** CPython 3.12.3, PyTorch 2.7.1+cpu, CPU only, one thread, deterministic algorithms enabled. Model config/init seed 1337; 124,928 parameters; `duo-byte-v1`; context 128; batch size 4; one deterministic seeded permutation of 487 train windows; first 100 of 122 batches consumed once without wrapping.
+- **Optimizer:** AdamW, learning rate 0.0003 from the existing config, weight decay 0.01, betas `(0.9, 0.999)`, epsilon `1e-8`, gradient-norm clip 1.0; no scheduler, mixed precision, or hyperparameter search. The model's configured initialization was retained. Cap: 100 optimizer steps or 120 seconds, whichever came first; validation every 10 steps.
+- **Metric method:** token-weighted next-token NLL over non-PAD targets; perplexity `exp(NLL)`. Pre-training train/validation baselines were recomputed deterministically. Baseline targets: 56,224 train and 8,540 validation.
 
-  | Split | Records | Windows | Scored next-token targets | Random-init NLL | Random-init perplexity |
-  |---|---:|---:|---:|---:|---:|
-  | Train | 102 | 487 | 56,224 | 5.536343772 | 253.748538708 |
-  | Validation | 13 | 72 | 8,540 | 5.536363717 | 253.753599869 |
-  | Test | 13 | 66 | 7,677 | 5.539546504 | 254.562530173 |
+| Step | Training NLL (token-weighted mean over the latest 10 optimizer batches) | Validation NLL | Validation perplexity |
+|---:|---:|---:|---:|
+| 0 baseline | 5.536344 (full train split) | 5.536364 | 253.753598 |
+| 10 | 5.341129 | 5.171812 | 176.233857 |
+| 20 | 5.071839 | 4.935765 | 139.179546 |
+| 30 | 4.840838 | 4.699457 | 109.887489 |
+| 40 | 4.599408 | 4.473043 | 87.622962 |
+| 50 | 4.424301 | 4.262616 | 70.995480 |
+| 60 | 4.221397 | 4.082603 | 59.299643 |
+| 70 | 4.014588 | 3.919227 | 50.361516 |
+| 80 | 3.911514 | 3.784574 | 44.016904 |
+| 90 | 3.734431 | 3.673338 | 39.383139 |
+| 100 | 3.702470 | 3.591931 | 36.304117 |
 
-  These are actual random-initialized model measurements on this tiny sample, not trained-model results or capability metrics. Recompute and record the same deterministic baseline at experiment start. The test baseline has been measured once; do not tune against it, and use the test split only for one final post-training comparison.
-- **Evaluation:** report step-wise training loss; fixed-seed validation loss/perplexity every 10 steps; compare final train/validation/test metrics with their pre-training baseline. Also save/reload a temporary checkpoint and confirm finite/equivalent outputs.
-- **Stop criteria:** stop at 100 optimizer steps or 2 minutes; stop immediately on non-finite loss/gradient/weights, failed checkpoint reload, or a validation loss more than 10% above its measured baseline at two consecutive validation checks. Do not tune against the test split. Regardless of outcome, report the experiment as a smoke test on a small arithmetic dataset, not as evidence of conversational capability.
+- **Outcome:** 100/100 steps completed; exact stop reason `100_optimizer_step_limit`; total elapsed 7.3182 seconds, including baseline, final verification, and test evaluation (optimizer loop: 2.6617 seconds). No loss, gradient, or post-step weights were non-finite. Validation NLL stayed below its 110%-of-baseline guard at every check.
+- **Test:** final single evaluation after the run: 13 records, 7,677 scored targets, NLL 3.620738, perplexity 37.365116. The earlier random-init test reference remains the pre-run value documented above (NLL 5.539546504, PPL 254.562530173); it was not recomputed or used for tuning in this run. No changes were made after viewing test metrics.
+- **Checkpoint:** saved locally and Git-ignored at `checkpoints/duo_v0/smoke/20261010T201807.659648Z/duo-smoke-final.pt` (511,897 bytes; SHA-256 `f8066d50e6c891c0e19e55b383eabebb75f6160019f7e698fcfcaa8ae97b49ce`). A separate Python process reloaded it and produced logits for synthetic IDs `[[2, 71, 108, 3]]` with maximum absolute difference 0.0 (tolerance `1e-6`). The checkpoint contains smoke-trained weights; it is not committed.
+- **Artifacts:** ignored `experiment.json` and `metrics.jsonl` in the same run directory preserve settings, hashes, all 100 step records, ten scheduled evaluation events, stop reason, and final metrics.
 
-This experiment remains **not approved and not run**. Full training is a separate decision after the user reviews the proposal.
+This establishes a functioning **bounded smoke-training path**, not general training/resume infrastructure or useful conversational ability. The dataset is only a tiny arithmetic subset and the 13-record test result is not a generalization claim. No optimizer-state resume, multi-seed evaluation, or full training was implemented or attempted.
+
+**One next milestone:** implement a reusable training/resume and deterministic evaluation-reporting path with portable optimizer-state checkpoints; do not launch another experiment without explicit approval.

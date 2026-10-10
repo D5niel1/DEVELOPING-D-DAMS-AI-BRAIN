@@ -1,6 +1,6 @@
 # D-DAMS AI Brain
 
-D-DAMS AI Brain is the independent research codebase for the Duo language-model project. The repository has a validated configuration system, deterministic `duo-byte-v1` tokenizer, reproducible local dataset pipeline, and a small **implemented and tested but untrained** Duo v0 decoder-only Transformer. No conversational capability, training result, production inference service, API, or agent is claimed.
+D-DAMS AI Brain is the research codebase for the Duo language-model project. It has a validated configuration system, deterministic `duo-byte-v1` tokenizer, reproducible local dataset pipeline, and an implemented/tested small Duo v0 decoder-only Transformer. One bounded 100-step CPU smoke run completed; its trained checkpoint is local and Git-ignored. This does not establish conversational capability. Production inference, API, and agents are not claimed.
 
 ## Current implemented milestone
 
@@ -34,7 +34,8 @@ Tests exercise forward shapes and finite logits, causal invariance, padding and 
 - `brain/tokenizer/` — deterministic versioned byte tokenizer
 - `brain/data/` — local dataset pipeline plus JSONL loader, record-isolated context windows, and batches
 - `brain/model/duo.py` — local Duo v0 Transformer, masked loss, checkpoint helpers
-- `brain/training/`, `brain/inference/`, `brain/agent/`, `brain/memory/` — reserved; not implemented
+- `brain/training/smoke.py` — one bounded deterministic CPU smoke runner; general training/resume is not implemented
+- `brain/inference/`, `brain/agent/`, `brain/memory/` — reserved; not implemented
 - `api/` — reserved for a later, gated API phase; not implemented
 - `configs/` — model and dataset configuration examples
 - `datasets/raw/` and `datasets/processed/` — local, Git-ignored data only
@@ -43,6 +44,6 @@ Tests exercise forward shapes and finite logits, causal invariance, padding and 
 
 ## Roadmap and gates
 
-Duo v0's **architecture acceptance gate** covers implementation, forward/backward behavior, causal masking, and fresh-process checkpoint reload. Passing it establishes a functioning testable model implementation only; it does not establish conversational capability. Training has not started. A separate controlled CPU smoke-training proposal is documented in [`docs/DUO_V0.md`](docs/DUO_V0.md) and requires explicit approval before any optimizer step. Training, reproducible evaluation, and standalone generation must be implemented and verified before any API. Manus is not a runtime dependency.
+Duo v0's **architecture acceptance gate** covers implementation, forward/backward behavior, causal masking, and fresh-process checkpoint reload. A single controlled smoke run also verified 100 optimizer steps, validation monitoring, and checkpoint reload; its exact evidence is documented in [`docs/DUO_V0.md`](docs/DUO_V0.md). This establishes only a testable model and smoke-training path, not conversational capability. General training/resume, standalone reproducible evaluation, and generation must be implemented and verified before any API. The smoke command is `python -m brain.training.smoke`; running it again would be a new experiment and requires separate approval. Manus is not a runtime dependency.
 
 See [`docs/FOUNDATION_BASELINE.md`](docs/FOUNDATION_BASELINE.md) for the initial repository audit and current foundation status.
