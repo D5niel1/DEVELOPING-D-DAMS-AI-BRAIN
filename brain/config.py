@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any, Mapping, TypeVar
@@ -17,6 +18,11 @@ class ModelConfig:
     num_heads: int
     feed_forward_dim: int
     dropout: float = 0.0
+    position_encoding: str = "learned_absolute"
+    activation: str = "gelu"
+    norm_eps: float = 1e-5
+    tie_embeddings: bool = True
+    initialization: str = "normal_0.02_xavier_uniform"
 
     def validate(self) -> None:
         for name in ("vocab_size", "context_length", "embedding_dim", "num_layers", "num_heads", "feed_forward_dim"):
@@ -25,8 +31,20 @@ class ModelConfig:
                 raise ValueError(f"model.{name} must be a positive integer")
         if self.embedding_dim % self.num_heads:
             raise ValueError("model.embedding_dim must be divisible by model.num_heads")
-        if not 0.0 <= self.dropout < 1.0:
+        if self.context_length > 128:
+            raise ValueError("model.context_length must not exceed 128")
+        if type(self.dropout) not in (int, float) or not math.isfinite(self.dropout) or not 0.0 <= self.dropout < 1.0:
             raise ValueError("model.dropout must be in [0, 1)")
+        if self.position_encoding != "learned_absolute":
+            raise ValueError("model.position_encoding must be 'learned_absolute'")
+        if self.activation != "gelu":
+            raise ValueError("model.activation must be 'gelu'")
+        if type(self.norm_eps) not in (int, float) or not math.isfinite(self.norm_eps) or self.norm_eps <= 0:
+            raise ValueError("model.norm_eps must be positive")
+        if type(self.tie_embeddings) is not bool:
+            raise ValueError("model.tie_embeddings must be a boolean")
+        if self.initialization != "normal_0.02_xavier_uniform":
+            raise ValueError("model.initialization must be 'normal_0.02_xavier_uniform'")
 
 
 @dataclass(frozen=True)

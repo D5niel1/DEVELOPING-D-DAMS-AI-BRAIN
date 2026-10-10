@@ -1,9 +1,9 @@
 {
   "checkpoint_dir": "checkpoints/duo_v0",
   "data": {
-    "test_path": "datasets/processed/test.txt",
-    "train_path": "datasets/processed/train.txt",
-    "validation_path": "datasets/processed/validation.txt"
+    "test_path": "datasets/processed/gsm8k-main-train-first128/test.jsonl",
+    "train_path": "datasets/processed/gsm8k-main-train-first128/train.jsonl",
+    "validation_path": "datasets/processed/gsm8k-main-train-first128/validation.jsonl"
   },
   "model": {
     "context_length": 128,
@@ -12,7 +12,12 @@
     "feed_forward_dim": 256,
     "num_heads": 4,
     "num_layers": 2,
-    "vocab_size": 260
+    "vocab_size": 260,
+    "position_encoding": "learned_absolute",
+    "activation": "gelu",
+    "norm_eps": 0.00001,
+    "tie_embeddings": true,
+    "initialization": "normal_0.02_xavier_uniform"
   },
   "tokenizer_version": "duo-byte-v1",
   "training": {

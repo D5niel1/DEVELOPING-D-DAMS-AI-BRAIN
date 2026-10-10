@@ -22,7 +22,7 @@ The vocabulary size is **260**. It is fixed: there is no learned vocabulary cons
 
 `ByteTokenizer.save(path)` emits readable UTF-8 JSON containing format/version, encoding, the unknown policy, explicit special-token IDs, and the complete vocabulary. Loading validates exact fields, version, special IDs, vocabulary size, uniqueness, spelling, and order; malformed or incompatible files fail closed. The format contains no executable data. The vocabulary SHA-256 helper is available for reproducibility records.
 
-`assert_compatible(config)` checks both `config.tokenizer_version == "duo-byte-v1"` and `config.model.vocab_size == 260`. The current `configs/duo_v0.json` is still a provisional example and is not evidence of a model. A future model must use a compatible configuration.
+`assert_compatible(config)` checks both `config.tokenizer_version == "duo-byte-v1"` and `config.model.vocab_size == 260`. The implemented, untrained Duo v0 model uses this tokenizer; see [`DUO_V0.md`](DUO_V0.md) for the architecture and acceptance evidence. Model implementation does not imply training or conversational capability.
 
 ## Minimal use
 
