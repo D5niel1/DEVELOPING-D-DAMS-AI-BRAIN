@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import os
+import pickle
 import tempfile
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -231,7 +233,7 @@ def load_checkpoint(path: str | Path, *, map_location: str | torch.device = "cpu
     """Load a data-only checkpoint with PyTorch's restricted weights-only loader."""
     try:
         payload = torch.load(path, map_location=map_location, weights_only=True)
-    except (OSError, RuntimeError, ValueError) as exc:
+    except (OSError, RuntimeError, ValueError, TypeError, EOFError, pickle.UnpicklingError, zipfile.BadZipFile) as exc:
         raise ValueError(f"cannot load Duo checkpoint: {exc}") from exc
     expected_fields = {
         "format", "format_version", "config", "tokenizer_version",
@@ -267,3 +269,59 @@ def load_checkpoint(path: str | Path, *, map_location: str | torch.device = "cpu
         raise ValueError(f"checkpoint state_dict is incompatible: {exc}") from exc
     model.eval()
     return model
+
+
+def generate_greedy(
+    model: DuoTransformer,
+    input_ids: torch.Tensor,
+    max_new_tokens: int,
+    *,
+    eos_token_id: int = 3,
+    pad_token_id: int = 0,
+) -> torch.Tensor:
+    """Greedy autoregressive decoding for an unpadded `[B,T]` prompt.
+
+    This local primitive exists for deterministic inference and checkpoint
+    verification; it is not a chat/API runtime. Context is cropped from the left
+    when generated sequences exceed the configured model context.
+    """
+    if not isinstance(model, DuoTransformer):
+        raise TypeError("model must be a DuoTransformer")
+    if not isinstance(input_ids, torch.Tensor) or input_ids.ndim != 2:
+        raise ValueError("input_ids must be a rank-2 [batch, sequence] tensor")
+    if input_ids.shape[0] < 1 or input_ids.shape[1] < 1:
+        raise ValueError("input_ids must have non-empty batch and sequence dimensions")
+    if type(max_new_tokens) is not int or max_new_tokens < 0:
+        raise ValueError("max_new_tokens must be a non-negative integer")
+    for name, token_id in (("eos_token_id", eos_token_id), ("pad_token_id", pad_token_id)):
+        if type(token_id) is not int or not 0 <= token_id < model.model_config.vocab_size:
+            raise ValueError(f"{name} must be a valid vocabulary ID")
+    if eos_token_id == pad_token_id:
+        raise ValueError("eos_token_id and pad_token_id must be different")
+    if input_ids.shape[1] > model.model_config.context_length:
+        raise ValueError("prompt length exceeds configured context_length")
+    if input_ids.dtype not in (torch.int32, torch.int64):
+        raise ValueError("input_ids must use torch.int32 or torch.int64 token IDs")
+    if bool(input_ids.eq(pad_token_id).any().item()):
+        raise ValueError("generation prompt must not contain PAD tokens")
+    if bool((input_ids < 0).any().item()) or bool((input_ids >= model.model_config.vocab_size).any().item()):
+        raise ValueError(f"input_ids must be in [0, {model.model_config.vocab_size})")
+
+    generated = input_ids.clone()
+    finished = torch.zeros(input_ids.shape[0], dtype=torch.bool, device=input_ids.device)
+    was_training = model.training
+    try:
+        model.eval()
+        with torch.inference_mode():
+            for _ in range(max_new_tokens):
+                context = generated[:, -model.model_config.context_length :]
+                logits = model(context)
+                next_ids = logits[:, -1, :].argmax(dim=-1)
+                next_ids = torch.where(finished, torch.full_like(next_ids, pad_token_id), next_ids)
+                generated = torch.cat((generated, next_ids[:, None]), dim=1)
+                finished |= next_ids.eq(eos_token_id)
+                if bool(finished.all().item()):
+                    break
+    finally:
+        model.train(was_training)
+    return generated

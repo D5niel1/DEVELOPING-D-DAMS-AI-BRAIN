@@ -1,0 +1,23 @@
+{
+  "model_config_path": "configs/duo_v0.json",
+  "train_path": "datasets/processed/gsm8k-main-train-first128/train.jsonl",
+  "validation_path": "datasets/processed/gsm8k-main-train-first128/validation.jsonl",
+  "output_dir": "checkpoints/duo_v0/training/default",
+  "dataset_manifest_path": "datasets/processed/gsm8k-main-train-first128/manifest.json",
+  "batch_size": 16,
+  "context_length": 128,
+  "learning_rate": 0.0003,
+  "weight_decay": 0.01,
+  "optimizer": "adamw",
+  "beta1": 0.9,
+  "beta2": 0.999,
+  "epsilon": 1e-8,
+  "seed": 1337,
+  "evaluation_interval": 100,
+  "checkpoint_interval": 100,
+  "max_steps": 1000,
+  "device": "cpu",
+  "gradient_clip_norm": 1.0,
+  "drop_last": false,
+  "num_threads": 1
+}

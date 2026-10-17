@@ -1,6 +1,6 @@
 # Duo v0 — Implemented Architecture and Verification
 
-**Status:** The local decoder-only Transformer is implemented and acceptance-tested; one bounded 100-step smoke run is complete, with its trained checkpoint kept locally and Git-ignored. The tracked config still initializes the base model. Neither the architecture gate nor this smoke run establishes conversational capability, language quality, or fitness as a product.
+**Status:** The local decoder-only Transformer is implemented and acceptance-tested; one bounded 100-step smoke run is complete, with its trained checkpoint kept locally and Git-ignored. Reusable training/resume, standalone evaluation, and a minimal local greedy decoder are now implemented and verified with synthetic fixtures. The tracked model config still initializes the base model. None of these facts establishes conversational capability, language quality, or fitness as a product.
 
 ## Backend and setup
 
@@ -104,6 +104,6 @@ git diff --check
 - **Checkpoint:** saved locally and Git-ignored at `checkpoints/duo_v0/smoke/20261010T201807.659648Z/duo-smoke-final.pt` (511,897 bytes; SHA-256 `f8066d50e6c891c0e19e55b383eabebb75f6160019f7e698fcfcaa8ae97b49ce`). A separate Python process reloaded it and produced logits for synthetic IDs `[[2, 71, 108, 3]]` with maximum absolute difference 0.0 (tolerance `1e-6`). The checkpoint contains smoke-trained weights; it is not committed.
 - **Artifacts:** ignored `experiment.json` and `metrics.jsonl` in the same run directory preserve settings, hashes, all 100 step records, ten scheduled evaluation events, stop reason, and final metrics.
 
-This establishes a functioning **bounded smoke-training path**, not general training/resume infrastructure or useful conversational ability. The dataset is only a tiny arithmetic subset and the 13-record test result is not a generalization claim. No optimizer-state resume, multi-seed evaluation, or full training was implemented or attempted.
+This historical result establishes a functioning **bounded smoke-training path**, not useful conversational ability. The dataset was only a tiny arithmetic subset and the 13-record test result is not a generalization claim. The reusable trainer/resume and evaluation implementation is separately documented in [`TRAINING_INFRASTRUCTURE.md`](TRAINING_INFRASTRUCTURE.md); it has only been exercised on temporary synthetic fixtures, not on the real sample or a new experiment. The model/API/agent roadmap remains incomplete.
 
-**One next milestone:** implement a reusable training/resume and deterministic evaluation-reporting path with portable optimizer-state checkpoints; do not launch another experiment without explicit approval.
+**One next milestone:** define and request separate approval for a controlled training experiment using the verified interfaces; do not execute it until approved.

@@ -3,6 +3,7 @@
 from .duo import (
     DuoTransformer,
     build_causal_allowed_mask,
+    generate_greedy,
     load_checkpoint,
     masked_next_token_loss,
     save_checkpoint,
@@ -11,6 +12,7 @@ from .duo import (
 __all__ = [
     "DuoTransformer",
     "build_causal_allowed_mask",
+    "generate_greedy",
     "load_checkpoint",
     "masked_next_token_loss",
     "save_checkpoint",
